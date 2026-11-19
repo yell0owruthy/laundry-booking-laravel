@@ -10,42 +10,24 @@ class AdminController extends Controller
 {
     // 1. Fungsi untuk menampilkan halaman utama Admin (Kelola Layanan & Rekap Penjualan)
     // 1. Fungsi menampilkan halaman Admin beserta fitur Filter Rekap Penjualan
-    public function index(Request $request)
+   // 1. Fungsi untuk menampilkan halaman utama Admin (Kelola Layanan & Rekap Penjualan)
+    public function index()
     {
-        // Mengambil semua data layanan laundry untuk tabel Kelola Layanan
+        // Mengambil semua data layanan laundry dari yang terbaru
         $services = Service::latest()->get();
 
-        // Menyiapkan query dasar transaksi beserta relasi user dan service (belum dieksekusi)
-        $query = Transaction::with(['user', 'service'])->latest();
+        // Mengambil semua data transaksi beserta data user dan layanan terkait
+        $transactions = Transaction::with(['user', 'service'])->latest()->get();
 
-        // Jika Admin memilih filter Status (pending / diproses / selesai), saring datanya
-        if ($request->filled('status')) {
-            $query->where('status', $request->status); // Menyaring kolom status sesuai pilihan
-        }
+        // Menghitung total seluruh uang penjualan dari kolom total_harga
+        $totalPendapatan = Transaction::sum('total_harga');
 
-        // Jika Admin memilih filter Kecepatan (reguler / cepat / lebih_cepat), saring datanya
-        if ($request->filled('tipe_kecepatan')) {
-            $query->where('tipe_kecepatan', $request->tipe_kecepatan); // Menyaring tipe kecepatan
-        }
+        // Menghitung total jumlah transaksi yang pernah masuk
+        $totalTransaksi = Transaction::count();
 
-        // Jika Admin memilih filter Tanggal tertentu, saring berdasarkan tanggal transaksi dibuat
-        if ($request->filled('tanggal')) {
-            $query->whereDate('created_at', $request->tanggal); // Menyaring hanya tanggal yang dipilih
-        }
-
-        // Mengeksekusi query filter menjadi kumpulan data transaksi
-        $transactions = $query->get();
-
-        // Menghitung total pendapatan dari hasil transaksi yang sudah difilter
-        $totalPendapatan = $transactions->sum('total_harga');
-
-        // Menghitung jumlah pesanan dari hasil transaksi yang sudah difilter
-        $totalTransaksi = $transactions->count();
-
-        // Mengirimkan seluruh data ke tampilan admin/dashboard.blade.php
+        // Mengirimkan data ke tampilan resources/views/admin/dashboard.blade.php
         return view('admin.dashboard', compact('services', 'transactions', 'totalPendapatan', 'totalTransaksi'));
     }
-
     // 2. Fungsi untuk menyimpan layanan laundry baru yang diinput oleh Admin
     public function storeService(Request $request)
     {
