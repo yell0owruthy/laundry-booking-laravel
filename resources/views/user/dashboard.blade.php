@@ -28,7 +28,7 @@
             {{-- Judul daftar layanan yang tersedia --}}
             <h3 class="text-lg font-bold text-gray-800 border-b pb-2">Daftar Opsi Layanan Kami</h3>
 
-            {{-- Menampilkan kartu-kartu layanan dalam bentuk grid 2 sampai 4 kolom --}}
+            {{-- Menampilkan kartu-kartu layanan dalam bentuk grid 1, 2, sampai 4 kolom --}}
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {{-- Melakukan perulangan untuk menampilkan setiap layanan dari database --}}
                 @foreach($services as $item)
@@ -113,7 +113,7 @@
         </div>
 
         {{-- ============================================================== --}}
-        {{-- BAGIAN 3: RIWAYAT PESANAN SAYA                                 --}}
+        {{-- BAGIAN 3: RIWAYAT PESANAN SAYA + TOMBOL CETAK STRUK            --}}
         {{-- ============================================================== --}}
         <div class="bg-white p-6 rounded-xl shadow space-y-4">
             {{-- Judul tabel riwayat pesanan milik user yang sedang login --}}
@@ -121,6 +121,7 @@
 
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse text-sm">
+                    {{-- Kepala tabel riwayat pesanan --}}
                     <thead>
                         <tr class="bg-gray-100 text-gray-700 border-b">
                             <th class="p-3">Tanggal Pesan</th>
@@ -130,21 +131,24 @@
                             <th class="p-3">Total Bayar</th>
                             <th class="p-3">Catatan</th>
                             <th class="p-3">Status</th>
+                            {{-- Kolom baru khusus tombol cetak struk pelanggan --}}
+                            <th class="p-3">Struk</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y">
                         {{-- Menampilkan setiap riwayat pesanan milik user dari variabel $myTransactions --}}
                         @forelse($myTransactions as $order)
                             <tr class="hover:bg-gray-50">
-                                {{-- Tanggal pemesanan --}}
+                                {{-- Tanggal dan jam pemesanan --}}
                                 <td class="p-3 text-gray-600">{{ $order->created_at->format('d M Y, H:i') }}</td>
 
                                 {{-- Nama layanan yang dipesan --}}
                                 <td class="p-3 font-semibold text-gray-800">{{ $order->service->nama_layanan ?? '-' }}</td>
 
-                                {{-- Tipe kecepatan yang dipilih --}}
+                                {{-- Tipe kecepatan yang dipilih (mengganti garis bawah _ menjadi spasi) --}}
                                 <td class="p-3 capitalize">
                                     {{ str_replace('_', ' ', $order->tipe_kecepatan) }}
+                                    {{-- Menampilkan info tambahan biaya per satuan jika bukan Reguler --}}
                                     @if($order->biaya_tambahan_per_satuan > 0)
                                         <span class="text-xs text-gray-500">
                                             (+Rp {{ number_format($order->biaya_tambahan_per_satuan, 0, ',', '.') }}/satuan)
@@ -152,7 +156,7 @@
                                     @endif
                                 </td>
 
-                                {{-- Jumlah berat atau potong --}}
+                                {{-- Jumlah berat (kg) atau potong (pcs) --}}
                                 <td class="p-3">{{ $order->jumlah }} {{ $order->service->satuan ?? 'kg' }}</td>
 
                                 {{-- Total harga yang harus dibayar --}}
@@ -160,7 +164,7 @@
                                     Rp {{ number_format($order->total_harga, 0, ',', '.') }}
                                 </td>
 
-                                {{-- Catatan pesanan --}}
+                                {{-- Catatan pesanan (tampilkan tanda - jika kosong) --}}
                                 <td class="p-3 text-gray-600">{{ $order->catatan ?: '-' }}</td>
 
                                 {{-- Badge warna status pengerjaan laundry --}}
@@ -173,11 +177,20 @@
                                         <span class="bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-full text-xs font-semibold">Selesai</span>
                                     @endif
                                 </td>
+
+                                {{-- Kolom baru: Tombol membuka halaman cetak struk milik pelanggan di tab baru --}}
+                                <td class="p-3">
+                                    <a href="{{ route('struk.cetak', $order->id) }}" target="_blank"
+                                       class="bg-gray-800 hover:bg-gray-900 text-white px-2.5 py-1 rounded text-xs font-semibold inline-block">
+                                        Cetak Struk
+                                    </a>
+                                </td>
                             </tr>
                         {{-- Jika user belum pernah memesan sama sekali --}}
                         @empty
                             <tr>
-                                <td colspan="7" class="p-4 text-center text-gray-500">Kamu belum memiliki riwayat pesanan laundry.</td>
+                                {{-- Menggunakan colspan="8" karena jumlah kolom tabel sekarang ada 8 --}}
+                                <td colspan="8" class="p-4 text-center text-gray-500">Kamu belum memiliki riwayat pesanan laundry.</td>
                             </tr>
                         @endforelse
                     </tbody>

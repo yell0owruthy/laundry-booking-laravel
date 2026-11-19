@@ -72,4 +72,19 @@ class UserController extends Controller
         // Mengembalikan user ke halaman dashboard dengan pesan bahwa pesanan berhasil dibuat
         return redirect()->back()->with('success', 'Pesanan laundry berhasil dibuat! Total biaya: Rp ' . number_format($totalHarga, 0, ',', '.'));
     }
+
+    // 3. Fungsi untuk menampilkan halaman cetak struk transaksi laundry
+    public function cetakStruk($id)
+    {
+        // Mencari data transaksi berdasarkan ID lengkap dengan nama pelanggan dan layanan
+        $transaction = Transaction::with(['user', 'service'])->findOrFail($id);
+
+        // Keamanan: Jika yang login bukan admin DAN bukan pemilik transaksi, tolak aksesnya
+        if (Auth::user()->role !== 'admin' && $transaction->user_id !== Auth::id()) {
+            abort(403, 'Anda tidak memiliki izin untuk mencetak struk pesanan orang lain.');
+        }
+
+        // Menampilkan halaman struk di resources/views/struk.blade.php
+        return view('struk', compact('transaction'));
+    }
 }

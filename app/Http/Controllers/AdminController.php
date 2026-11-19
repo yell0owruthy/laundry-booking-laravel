@@ -9,21 +9,40 @@ use Illuminate\Http\Request; // Mengimpor class Request untuk menangkap input da
 class AdminController extends Controller
 {
     // 1. Fungsi untuk menampilkan halaman utama Admin (Kelola Layanan & Rekap Penjualan)
-    public function index()
+    // 1. Fungsi menampilkan halaman Admin beserta fitur Filter Rekap Penjualan
+    public function index(Request $request)
     {
-        // Mengambil semua data layanan laundry dari tabel services, diurutkan dari yang terbaru
+        // Mengambil semua data layanan laundry untuk tabel Kelola Layanan
         $services = Service::latest()->get();
 
-        // Mengambil semua data transaksi beserta data user dan layanan terkait (Eager Loading)
-        $transactions = Transaction::with(['user', 'service'])->latest()->get();
+        // Menyiapkan query dasar transaksi beserta relasi user dan service (belum dieksekusi)
+        $query = Transaction::with(['user', 'service'])->latest();
 
-        // Menghitung total seluruh uang penjualan dari kolom total_harga di tabel transactions
-        $totalPendapatan = Transaction::sum('total_harga');
+        // Jika Admin memilih filter Status (pending / diproses / selesai), saring datanya
+        if ($request->filled('status')) {
+            $query->where('status', $request->status); // Menyaring kolom status sesuai pilihan
+        }
 
-        // Menghitung total jumlah transaksi yang pernah masuk
-        $totalTransaksi = Transaction::count();
+        // Jika Admin memilih filter Kecepatan (reguler / cepat / lebih_cepat), saring datanya
+        if ($request->filled('tipe_kecepatan')) {
+            $query->where('tipe_kecepatan', $request->tipe_kecepatan); // Menyaring tipe kecepatan
+        }
 
-        // Mengirimkan data ke tampilan resources/views/admin/dashboard.blade.php
+        // Jika Admin memilih filter Tanggal tertentu, saring berdasarkan tanggal transaksi dibuat
+        if ($request->filled('tanggal')) {
+            $query->whereDate('created_at', $request->tanggal); // Menyaring hanya tanggal yang dipilih
+        }
+
+        // Mengeksekusi query filter menjadi kumpulan data transaksi
+        $transactions = $query->get();
+
+        // Menghitung total pendapatan dari hasil transaksi yang sudah difilter
+        $totalPendapatan = $transactions->sum('total_harga');
+
+        // Menghitung jumlah pesanan dari hasil transaksi yang sudah difilter
+        $totalTransaksi = $transactions->count();
+
+        // Mengirimkan seluruh data ke tampilan admin/dashboard.blade.php
         return view('admin.dashboard', compact('services', 'transactions', 'totalPendapatan', 'totalTransaksi'));
     }
 

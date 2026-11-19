@@ -11,14 +11,14 @@
         </h2>
     </x-slot>
 
-    {{-- Pembungkus utama konten halaman dengan jarak atas-bawah (py-8) --}}
+    {{-- Pembungkus utama konten halaman dengan jarak atas-bawah (py-8) dan jarak antar seksi (space-y-8) --}}
     <div class="py-8 max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-8">
 
-        {{-- Mengecek apakah ada pesan sukses dari Controller (misal setelah tambah/hapus layanan) --}}
+        {{-- Mengecek apakah ada pesan sukses dari Controller (misal setelah tambah/edit/hapus layanan) --}}
         @if(session('success'))
             {{-- Kotak notifikasi berwarna hijau jika proses berhasil --}}
             <div class="bg-green-100 border border-green-400 text-green-800 px-4 py-3 rounded-lg shadow-sm">
-                {{-- Menampilkan isi teks pesan sukses --}}
+                {{-- Menampilkan isi teks pesan sukses dari session --}}
                 {{ session('success') }}
             </div>
         @endif
@@ -26,8 +26,9 @@
         {{-- ============================================================== --}}
         {{-- BAGIAN 1: KARTU RINGKASAN REKAP PENJUALAN                      --}}
         {{-- ============================================================== --}}
+        {{-- Grid 2 kolom di layar sedang/besar (md:grid-cols-2) dan 1 kolom di HP --}}
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {{-- Kartu 1: Menampilkan Total Pendapatan Penjualan --}}
+            {{-- Kartu 1: Menampilkan Total Pendapatan Penjualan (otomatis ikut berubah sesuai Filter) --}}
             <div class="bg-white p-6 rounded-xl shadow border-l-4 border-blue-600">
                 {{-- Label judul kartu pendapatan --}}
                 <p class="text-sm font-medium text-gray-500 uppercase">Total Pendapatan Penjualan</p>
@@ -37,7 +38,7 @@
                 </p>
             </div>
 
-            {{-- Kartu 2: Menampilkan Total Transaksi Masuk --}}
+            {{-- Kartu 2: Menampilkan Total Transaksi Masuk (otomatis ikut berubah sesuai Filter) --}}
             <div class="bg-white p-6 rounded-xl shadow border-l-4 border-emerald-600">
                 {{-- Label judul kartu jumlah pesanan --}}
                 <p class="text-sm font-medium text-gray-500 uppercase">Total Transaksi Masuk</p>
@@ -131,7 +132,9 @@
                                     {{-- Kolom edit Satuan (kg / pcs) --}}
                                     <td class="p-2">
                                         <select name="satuan" class="border rounded px-2 py-1 text-sm">
+                                            {{-- Jika satuan layanan 'kg', otomatis terpilih (selected) --}}
                                             <option value="kg" {{ $service->satuan === 'kg' ? 'selected' : '' }}>kg</option>
+                                            {{-- Jika satuan layanan 'pcs', otomatis terpilih (selected) --}}
                                             <option value="pcs" {{ $service->satuan === 'pcs' ? 'selected' : '' }}>pcs</option>
                                         </select>
                                     </td>
@@ -182,13 +185,46 @@
         </div>
 
         {{-- ============================================================== --}}
-        {{-- BAGIAN 3: TABEL REKAP PENJUALAN & KELOLA STATUS PESANAN        --}}
+        {{-- BAGIAN 3: TABEL REKAP PENJUALAN, FILTER, & CETAK STRUK         --}}
         {{-- ============================================================== --}}
         <div class="bg-white p-6 rounded-xl shadow space-y-4">
             {{-- Judul seksi Rekap Penjualan --}}
             <h3 class="text-lg font-bold text-gray-800 border-b pb-2">2. Rekap Penjualan & Transaksi Pelanggan</h3>
 
-            {{-- Pembungkus tabel agar responsif di layar kecil --}}
+            {{-- Form Filter Rekap Penjualan menggunakan metode GET agar parameter muncul di URL --}}
+            <form action="{{ route('admin.dashboard') }}" method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-3 bg-gray-50 p-3 rounded-lg border">
+                {{-- Dropdown Filter berdasarkan Status Cucian (tetap menjaga pilihan terakhir dengan request('status')) --}}
+                <select name="status" class="border rounded px-3 py-1.5 text-sm">
+                    <option value="">-- Semua Status --</option>
+                    <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pending</option>
+                    <option value="diproses" {{ request('status') === 'diproses' ? 'selected' : '' }}>Diproses</option>
+                    <option value="selesai" {{ request('status') === 'selesai' ? 'selected' : '' }}>Selesai</option>
+                </select>
+
+                {{-- Dropdown Filter berdasarkan Tipe Kecepatan (tetap menjaga pilihan terakhir dengan request('tipe_kecepatan')) --}}
+                <select name="tipe_kecepatan" class="border rounded px-3 py-1.5 text-sm">
+                    <option value="">-- Semua Kecepatan --</option>
+                    <option value="reguler" {{ request('tipe_kecepatan') === 'reguler' ? 'selected' : '' }}>Reguler</option>
+                    <option value="cepat" {{ request('tipe_kecepatan') === 'cepat' ? 'selected' : '' }}>Cepat</option>
+                    <option value="lebih_cepat" {{ request('tipe_kecepatan') === 'lebih_cepat' ? 'selected' : '' }}>Lebih Cepat</option>
+                </select>
+
+                {{-- Input Kalender untuk menyaring transaksi berdasarkan Tanggal tertentu --}}
+                <input type="date" name="tanggal" value="{{ request('tanggal') }}" class="border rounded px-3 py-1.5 text-sm">
+
+                {{-- Tombol Terapkan Filter dan Tombol Reset (menghapus semua filter di URL) --}}
+                <div class="flex gap-2">
+                    <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-sm font-semibold">
+                        Filter
+                    </button>
+                    {{-- Link Reset mengembalikan ke rute admin.dashboard tanpa parameter filter --}}
+                    <a href="{{ route('admin.dashboard') }}" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-3 py-1.5 rounded text-sm font-semibold text-center">
+                        Reset
+                    </a>
+                </div>
+            </form>
+
+            {{-- Pembungkus tabel agar responsif (bisa digeser ke samping di layar kecil) --}}
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse text-sm">
                     {{-- Baris judul kolom tabel rekap penjualan --}}
@@ -202,6 +238,8 @@
                             <th class="p-3">Total Harga</th>
                             <th class="p-3">Catatan / Alamat</th>
                             <th class="p-3">Status Cucian</th>
+                            {{-- Kolom baru khusus tombol cetak struk --}}
+                            <th class="p-3">Struk</th>
                         </tr>
                     </thead>
                     {{-- Isi data transaksi --}}
@@ -218,7 +256,7 @@
                                 {{-- Menampilkan nama layanan dari relasi tabel services --}}
                                 <td class="p-3">{{ $trx->service->nama_layanan ?? '-' }}</td>
 
-                                {{-- Menampilkan badge tipe kecepatan (reguler, cepat, atau lebih_cepat) --}}
+                                {{-- Menampilkan badge warna tipe kecepatan (reguler, cepat, atau lebih_cepat) --}}
                                 <td class="p-3">
                                     @if($trx->tipe_kecepatan === 'reguler')
                                         <span class="bg-gray-200 text-gray-800 px-2 py-1 rounded text-xs font-semibold">Reguler (2-3 Hari)</span>
@@ -237,7 +275,7 @@
                                     Rp {{ number_format($trx->total_harga, 0, ',', '.') }}
                                 </td>
 
-                                {{-- Menampilkan catatan atau alamat pelanggan --}}
+                                {{-- Menampilkan catatan atau alamat pelanggan (jika kosong tampilkan tanda -) --}}
                                 <td class="p-3 text-gray-600">{{ $trx->catatan ?: '-' }}</td>
 
                                 {{-- Kolom untuk mengubah status pesanan (pending -> diproses -> selesai) --}}
@@ -259,11 +297,20 @@
                                         </button>
                                     </form>
                                 </td>
+
+                                {{-- Kolom baru: Tombol membuka halaman cetak struk transaksi di tab baru (target="_blank") --}}
+                                <td class="p-3">
+                                    <a href="{{ route('struk.cetak', $trx->id) }}" target="_blank"
+                                       class="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded text-xs font-semibold inline-block">
+                                        Struk
+                                    </a>
+                                </td>
                             </tr>
-                        {{-- Jika belum ada transaksi sama sekali --}}
+                        {{-- Jika tidak ada transaksi yang cocok dengan filter atau masih kosong --}}
                         @empty
                             <tr>
-                                <td colspan="8" class="p-4 text-center text-gray-500">Belum ada transaksi penjualan yang masuk.</td>
+                                {{-- Menggunakan colspan="9" karena jumlah kolom tabel sekarang ada 9 --}}
+                                <td colspan="9" class="p-4 text-center text-gray-500">Belum ada transaksi penjualan yang sesuai filter.</td>
                             </tr>
                         @endforelse
                     </tbody>
