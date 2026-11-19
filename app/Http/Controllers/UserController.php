@@ -10,18 +10,27 @@ use Illuminate\Support\Facades\Auth; // Mengimpor Auth untuk mengambil ID user y
 class UserController extends Controller
 {
     // 1. Fungsi untuk menampilkan halaman User (Opsi Layanan & Riwayat Pesanan Saya)
-    public function index()
+   // 1. Fungsi menampilkan halaman User + Filter Kategori Kecepatan pada Riwayat Pesanan Saya
+    public function index(Request $request)
     {
-        // Mengambil semua daftar layanan laundry yang tersedia untuk dipilih user
+        // Mengambil semua daftar layanan laundry yang tersedia
         $services = Service::all();
 
-        // Mengambil riwayat transaksi khusus milik user yang sedang login saja
-        $myTransactions = Transaction::with('service') // Mengambil relasi nama layanan
-            ->where('user_id', Auth::id()) // Memfilter hanya transaksi milik ID user yang login
-            ->latest() // Mengurutkan dari pesanan paling baru
-            ->get(); // Mengeksekusi query menjadi kumpulan data
+        // Menyiapkan query riwayat transaksi khusus milik user yang sedang login
+        $query = Transaction::with('service') // Mengambil relasi nama layanan
+            ->where('user_id', Auth::id()) // Memfilter hanya transaksi milik user yang login
+            ->latest(); // Mengurutkan dari pesanan paling baru
 
-        // Menampilkan halaman resources/views/user/dashboard.blade.php beserta datanya
+        // Mengecek apakah user memilih filter kecepatan (reguler / cepat / lebih_cepat)
+        if ($request->filled('kecepatan')) {
+            // Menyaring riwayat pesanan berdasarkan kolom tipe_kecepatan yang dipilih
+            $query->where('tipe_kecepatan', $request->kecepatan);
+        }
+
+        // Mengeksekusi query menjadi kumpulan data riwayat pesanan
+        $myTransactions = $query->get();
+
+        // Mengirimkan data layanan dan riwayat pesanan ke resources/views/user/dashboard.blade.php
         return view('user.dashboard', compact('services', 'myTransactions'));
     }
 

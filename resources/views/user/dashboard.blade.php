@@ -119,6 +119,36 @@
             {{-- Judul tabel riwayat pesanan milik user yang sedang login --}}
             <h3 class="text-lg font-bold text-gray-800 border-b pb-2">Riwayat Pesanan Saya</h3>
 
+            {{-- Filter Kategori Kecepatan pada Riwayat Pesanan Saya --}}
+            <div class="flex flex-wrap items-center gap-2">
+                {{-- Label teks penjelas filter --}}
+                <span class="text-xs font-semibold text-gray-500 mr-1">Filter Kecepatan:</span>
+
+                {{-- Tombol 1: Tampilkan Semua Pesanan (menghapus parameter ?kecepatan di URL) --}}
+                <a href="{{ route('user.dashboard') }}"
+                   class="px-3 py-1 rounded-full text-xs font-semibold border {{ !request('kecepatan') ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 hover:bg-gray-100' }}">
+                    Semua
+                </a>
+
+                {{-- Tombol 2: Filter khusus pesanan Reguler --}}
+                <a href="{{ route('user.dashboard', ['kecepatan' => 'reguler']) }}"
+                   class="px-3 py-1 rounded-full text-xs font-semibold border {{ request('kecepatan') === 'reguler' ? 'bg-gray-800 text-white border-gray-800' : 'bg-white text-gray-700 hover:bg-gray-100' }}">
+                    Reguler
+                </a>
+
+                {{-- Tombol 3: Filter khusus pesanan Cepat --}}
+                <a href="{{ route('user.dashboard', ['kecepatan' => 'cepat']) }}"
+                   class="px-3 py-1 rounded-full text-xs font-semibold border {{ request('kecepatan') === 'cepat' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 hover:bg-gray-100' }}">
+                    Cepat
+                </a>
+
+                {{-- Tombol 4: Filter khusus pesanan Lebih Cepat (Express) --}}
+                <a href="{{ route('user.dashboard', ['kecepatan' => 'lebih_cepat']) }}"
+                   class="px-3 py-1 rounded-full text-xs font-semibold border {{ request('kecepatan') === 'lebih_cepat' ? 'bg-purple-600 text-white border-purple-600' : 'bg-white text-gray-700 hover:bg-gray-100' }}">
+                    Lebih Cepat
+                </a>
+            </div>
+
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse text-sm">
                     {{-- Kepala tabel riwayat pesanan --}}
