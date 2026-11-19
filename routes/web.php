@@ -59,5 +59,13 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy'); // Hapus akun
 });
 
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // TAMBAHKAN BARIS INI UNTUK CETAK STRUK:
+    Route::get('/struk/{id}', [UserController::class, 'cetakStruk'])->name('struk.cetak');
+});
 // Memuat seluruh rute autentikasi (login, register, logout) dari file routes/auth.php
 require __DIR__.'/auth.php';
